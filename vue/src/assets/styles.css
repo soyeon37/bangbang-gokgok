@@ -1,0 +1,55 @@
+.home.masthead {
+    overflow: hidden;
+    position: relative;
+    background-image: url('../img/bg-city.jpg');
+    background-color: #343a40;
+    background-size: cover;
+    padding-top: 8rem;
+    padding-bottom: 8rem;
+  }
+  .home.masthead:before {
+    content: "";
+    position: absolute;
+    background-color: #1c375e;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+  }
+  
+  .masthead .slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    animation: slide 20s infinite;
+    opacity: 0.7;
+  }
+  
+  .masthead .slide:nth-child(1) {
+    background-image: url("../img/bg-city.jpg");
+    animation-delay: -0s;
+  }
+  
+  .masthead .slide:nth-child(2) {
+    background-image: url("../img/bg-damyang.jpg");
+    animation-delay: -4s;
+  }
+    
+  .masthead .slide:nth-child(3) {
+    background-image: url("../img/bg-hanok.jpg");
+    animation-delay: -8s;
+  }
+    
+  .masthead .slide:nth-child(4) {
+    background-image: url("../img/bg-jeju.jpg");
+    animation-delay: -12s;
+  }
+  
+  .masthead .slide:nth-child(5) {
+    background-image: url("../img/bg-chungbuk.jpg");
+    animation-delay: -16s;
+  }

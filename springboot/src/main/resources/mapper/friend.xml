@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="com.ssafy.friend.model.mapper.FriendMapper">
+	<resultMap type="friendDto" id="friend">
+		<result column="friend_id" property="friendId"/>
+		<result column="user_id" property="userId"/>
+		<result column="follower_id" property="followerId"/>
+		<result column="status" property="status"/>
+	</resultMap>
+	
+	<select id="getFriendList" parameterType="string" resultMap="friend">
+		SELECT friend_id, follower_id, user_id, status
+		FROM friends
+		WHERE user_id = #{userId} AND status = 0
+	</select>
+	
+	<select id="nowFriends" parameterType="string" resultMap="friend">
+		SELECT friend_id, follower_id, user_id, status
+		FROM friends
+		WHERE user_id = #{userId} AND status = 1
+	</select>
+	
+	<insert id="addFriend" parameterType="map">
+		INSERT INTO friends (follower_id, user_id, status)
+		VALUES (#{followerId}, #{userId}, 0)
+	</insert>
+	
+	<update id="acceptFriend" parameterType="map">
+		UPDATE friends
+		SET status = 1
+		WHERE follower_id = #{followerId} AND user_id = #{userId}
+	</update>
+	
+	<delete id="declineFriend" parameterType="map">
+		DELETE FROM friends
+		WHERE follower_id = #{followerId} AND user_id = #{userId}
+	</delete>
+</mapper>

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ssafy.notice.model.mapper.NoticeMapper">
+	<resultMap type="noticeDto" id="article">
+		<result column="notice_id" property="noticeId"/>
+		<result column="user_id" property="userId"/>
+		<result column="title" property="title"/>
+		<result column="content" property="content"/>
+		<result column="hit" property="hit"/>
+		<result column="register_time" property="registerTime"/>
+		<result column="category" property="category"/>
+		<result column="likes" property="likes"/>
+	</resultMap>
+	
+	<insert id="writeArticle" parameterType="noticeDto">
+		insert into notices (user_id, title, content)
+		values (#{userId}, #{title}, #{content})
+	</insert>
+	
+	<sql id="search">
+		<if test="word != null and word != ''">
+			<if test="key == 'title'">
+				and title like concat('%', #{word}, '%')
+			</if>
+			<if test="key != 'title'">
+				and ${key} = #{word}
+			</if>
+		</if>
+	</sql>
+	
+	<select id="listArticle" parameterType="map" resultMap="article">
+		select notice_id, user_id, title, content, hit, register_time, category, likes
+		from notices
+		<where>
+			<include refid="search"></include>
+		</where>
+		order by notice_id desc
+		limit #{start}, #{listsize}
+	</select>
+	
+	<select id="getTotalArticleCount" parameterType="map" resultType="int">
+		select count(notice_id)
+		from notices
+		<where>
+			<include refid="search"></include>
+		</where>
+	</select>
+	
+	<select id="getArticle" parameterType="int" resultMap="article">
+		select notice_id, user_id, title, content, hit, register_time, category, likes
+		from notices
+		where notice_id = #{noticeId}
+	</select>
+	
+	<update id="updateHit" parameterType="int">
+		update notices
+		set hit = hit + 1
+		where notice_id = #{noticeId}
+	</update>
+	
+	<delete id="delete" parameterType="int">
+		delete from notices
+		where notice_id = #{noticeId}
+	</delete>
+	
+	<update id="update" parameterType="noticeDto">
+		update notices
+		set title = #{title}, content = #{content}
+		where notice_id = #{noticeId}
+	</update>
+</mapper>

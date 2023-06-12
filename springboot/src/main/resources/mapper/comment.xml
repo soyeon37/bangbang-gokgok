@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.comment.model.mapper.CommentMapper">
+	<resultMap type="commentDto" id="comment">
+		<result column="comment_id" property="commentId"/>
+		<result column="content" property="content"/>
+		<result column="user_id" property="userId"/>
+		<result column="register_time" property="registerTime"/>
+		<result column="article_id" property="articleId"/>
+		<result column="parent" property="parent"/>
+		<result column="depth" property="depth"/>
+		<result column="group_no" property="groupNo"/>
+		<result column="category" property="category"/>
+	</resultMap>
+	
+	<insert id="insertComment" parameterType="commentDto">
+		insert into comments (content, user_id, article_id, parent, depth, group_no, category)
+		values	(#{content}, #{userId}, #{articleId}, #{parent}, #{depth}, #{groupNo}, #{category})
+		<selectKey resultType="int" keyProperty="commentId" order="AFTER">
+			select last_insert_id()
+		</selectKey>
+	</insert>
+	
+	<update id="updateGroupNo" parameterType="int">
+    	update comments set group_no = #{commentId} where comment_id = #{commentId} and depth = 0
+	</update>
+	
+	<select id="getComments" parameterType="map" resultMap="comment">
+		WITH RECURSIVE comments_hierarchy AS (
+		    SELECT comment_id, article_id, content, user_id, register_time, group_no, parent, depth, register_time as parent_register_time, 1 AS level
+		    FROM comments
+		    WHERE parent = 0 AND article_id = #{articleId} AND category = 1
+		    UNION ALL
+		    SELECT r.comment_id, r.article_id, r.content, r.user_id, r.register_time, r.group_no, r.parent, r.depth, if(r.depth=1, r.register_time, rh.parent_register_time), rh.level + 1
+		    FROM comments r
+		    INNER JOIN comments_hierarchy rh ON r.parent = rh.comment_id
+		)
+		SELECT comment_id, article_id, content, user_id, register_time, group_no, parent, depth
+		FROM comments_hierarchy
+		ORDER BY group_no ASC, parent_register_time ASC, register_time ASC;
+	</select>
+	
+	<update id="updateComment" parameterType="commentDto">
+		update comments
+		set content = #{content}
+		where comment_id = #{commentId}
+	</update>
+	
+	<delete id="deleteComment" parameterType="map">
+		delete from comments
+		where comment_id = #{commentId} and category = #{category}
+	</delete>
+</mapper>

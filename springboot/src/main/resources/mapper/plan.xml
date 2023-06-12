@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ssafy.plan.model.mapper.PlanMapper">
+
+	<resultMap type="plandto" id="plan">
+		<result column="plan_id" property="planId"/>
+		<result column="plan_name" property="planName"/>
+		<result column="user_id" property="userId"/>
+		<result column="content" property="content"/>
+		<result column="friend_list_id" property="friendListId"/>
+		<result column="start_date" property="startDate"/>
+		<result column="end_date" property="endDate"/>
+		<result column="isOpen" property="isOpen"/>
+	</resultMap>
+	
+	<resultMap type="tripDto" id="trip">
+		<result column="trip_id" property="tripId"/>
+		<result column="plan_id" property="planId"/>
+		<result column="trip_no" property="tripNo"/>
+		<result column="content_id" property="contentId"/>
+		<result column="content_type_id" property="contentTypeId"/>
+		<result column="title" property="title"/>
+		<result column="addr1" property="addr1"/>
+		<result column="addr2" property="addr2"/>
+		<result column="zipcode" property="zipcode"/>
+		<result column="tel" property="tel"/>
+		<result column="first_image" property="firstImage"/>
+		<result column="first_image2" property="firstImage2"/>
+		<result column="readcount" property="readcount"/>
+		<result column="sido_code" property="sidoCode"/>
+		<result column="gugun_code" property="gugunCode"/>
+		<result column="latitude" property="latitude"/>
+		<result column="longitude" property="longitude"/>
+		<result column="mlevel" property="mlevel"/>
+	
+		<result column="homepage" property="hompage"/>
+		<result column="overview" property="overview"/>
+		<result column="telname" property="telname"/>
+		
+		<result column="cat1" property="cat1"/>
+		<result column="cat2" property="cat2"/>
+		<result column="cat3" property="cat3"/>
+		<result column="created_time" property="createdTime"/>
+		<result column="modified_time" property="modifiedTime"/>
+		<result column="booktour" property="booktour"/>
+		<result column="scrap_cnt" property="scrapCnt"/>
+	</resultMap>
+	
+	
+	<insert id="registTrip" parameterType="hashmap" >
+		insert into plans (plan_name, user_id, start_date, end_date, content, isOpen)
+		values (#{planName}, #{userId}, #{startDate}, #{endDate}, #{content}, 1);
+	</insert>
+	
+	<sql id="search">
+		<if test="word != null and word != ''">
+			<if test="key == 'title'">
+				and title like concat('%', #{word}, '%')
+			</if>
+			<if test="key != 'title'">
+				and ${key} = #{word}
+			</if>
+		</if>
+	</sql>
+	
+	<select id="planList" parameterType="map" resultMap="plan">
+		select plan_id, plan_name, user_id, content, friend_list_id, date_format(start_date,'%y.%m.%d')start_date, date_format(end_date,'%y.%m.%d')end_date, isOpen 
+		from plans
+		where user_id = #{userId}
+		
+			<include refid="search"></include>
+		
+		order by plan_id desc
+		limit #{start}, #{listsize}
+	</select>
+	
+	<select id="topList" resultMap="plan">
+		select plan_id, plan_name, user_id, content, friend_list_id, date_format(start_date,'%y.%m.%d')start_date, date_format(end_date,'%y.%m.%d')end_date, isOpen 
+		from plans
+		where isOpen = 1
+		order by plan_id desc
+		limit 5
+	</select>
+	
+	<select id="viewPlan" parameterType="int" resultMap="trip">
+		select t.trip_id trip_id, t.trip_no trip_no, t.content_id content_id, a.content_type_id content_type_id, a.title title, a.addr1 addr1, a.addr2 addr2, a.zipcode zipcode, a.tel tel, a.first_image first_image, a.latitude latitude, a.longitude longitude
+		from attraction_info a, trip t
+		where t.plan_id = #{planId} and a.content_id = t.content_id;
+	</select>
+	
+	
+	<delete id="deletePlan" parameterType="int">
+		delete from plans
+		where plan_id = #{planId};
+	</delete>
+	
+	<delete id="deleteMemo" parameterType="int">
+		delete from memos
+		where plan_id = #{planId}
+	</delete>
+	
+	<select id="getTotalCount" parameterType="map" resultType="int">
+		select count(plan_id)
+		from plans
+		where user_id = #{userId}
+		<if test="word != null and word != ''">
+			<if test="key == 'subject'">
+				and subject like concat('%', #{word}, '%')
+			</if>
+			<if test="key != 'subject'">
+				and ${key} = #{word}
+			</if>
+		</if>
+	</select>
+
+	<update id="modifyMemo" parameterType="hashmap">
+		update memos
+		set content = #{content}
+		where plan_id = #{planId}
+	</update>
+	<update id="modifyPlan" parameterType="hashmap">
+		update plans
+		set plan_name = #{planName}, start_date = #{startDate}, end_date = #{endDate}
+		where plan_id = #{planId}
+	</update>
+	
+	<!-- deleteTrip start -->
+	<delete id="deleteTrip" parameterType="int">
+		delete from trip
+		where trip_id = #{tripId};
+	</delete>
+	
+	<update id="deleteTripUpdatePlan" parameterType="hashmap">
+		update trip
+		set trip_no = trip_no - 1
+		where user_id = #{userId} and plan_id = #{planId} and trip_no > #{tripNo};
+	</update>	
+	<!-- deleteTrip end -->
+	
+	
+	
+	<select id="modifyTripNo" parameterType="hashmap" resultType="int">
+		select trip_no
+		from trip,
+		where trip_id = #{tripId};
+	</select>
+	
+	<update id="modifyTripNoUpdate" parameterType="hashmap">
+		<if test="gap gt 0">
+			update trip
+			set trip_no = trip_no - 1
+			where user_id =#{userId} and plan_id = #{planId} and trip_no > #{tripNo}  and trip_no <![CDATA[<=]]> (#{tripNo} + #{gap});
+		</if>
+		<if test='gap lte 0'>
+			update trip
+			set trip_no = trip_no - 1
+			where user_id =#{userId} and plan_id = #{planId} and trip_no > #{tripNo}+#{gap}  and trip_no <![CDATA[<=]]> #{tripNo};
+		</if>
+	</update>
+	<update id="modifyTripNoUpdateTrip">
+		update trip
+		set trip_no = (#{tripNo}+#{gap})
+		where trip_id = #{tripId};
+	</update>
+	
+	<select id="getTripCnt" parameterType="map" resultType="int">
+		select count(trip_id)
+		from trip
+		where plan_id = #{planId}
+	</select>
+	
+	
+	<!-- modifyTrip start -->
+	<delete id="modifyTripDelete" parameterType="int">
+		delete from trip
+		where plan_id = #{planId}
+	</delete>
+	
+	<insert id="modifyTripInsert" parameterType="tripDto">
+		insert into trip (trip_no, plan_id, content_id)
+		value (#{tripNo}, #{planId}, #{contentId})
+	</insert>
+	<!-- modifyTrip end -->
+	
+	
+	
+	
+<!-- 	<select id="modifyTripNo" parameterType="hashmap" resultType="int">
+		select trip_no
+		from trip
+		where trip_id = #{tripId};
+	</select> -
+	
+	<update id="modifyTripNoUpdate" parameterType="hashmap">
+		<if test="gap gt 0">
+			update trip
+			set trip_no = trip_no - 1
+			where user_id = #{userId} and trip_no > #{tripNo}  and trip_no <![CDATA[<=]]> (#{tripNo} + #{gap});
+		</if>
+		<if test='gap lte 0'>
+			update trip
+			set trip_no = trip_no - 1
+			where user_id = #{userId} and trip_no > #{tripNo}+#{gap}  and trip_no <![CDATA[<=]]> #{tripNo};
+		</if>
+	</update>
+	<update id="modifyTripNoUpdateTrip">
+		update trip
+		set trip_no = (#{tripNo}+#{gap})
+		where trip_id = #{tripId};
+	</update>
+	-->
+</mapper>
